@@ -1,0 +1,201 @@
+---
+title: "How I built a citation intent classifier with SciBERT"
+excerpt: "From raw MultiCite dataset to a deployed FastAPI microservice — every decision, every mistake, and why Focal Loss changed everything."
+date: "2026-05-10"
+category: "TUTORIAL"
+tags: ["NLP", "SciBERT", "FastAPI", "PyTorch"]
+readTime: "14 min"
+---
+
+## Introduction
+
+Citation intent classification is the task of labeling *why* a paper cites another — is it background knowledge, a method being used, or a result being compared against?
+
+I built this as an NLP course project at NIT Kurukshetra using the **MultiCite dataset**. What started as a baseline SciBERT fine-tune turned into a full pipeline with Focal Loss, ensemble learning, and a RAG layer on top. This post documents every decision and the reasoning behind it.
+
+---
+
+## The dataset: MultiCite
+
+MultiCite contains citation sentences from scientific papers, each labeled with one or more intent categories:
+
+- `BACKGROUND` — the cited work provides context
+- `METHOD` — the cited work's approach is being used
+- `RESULT` — the cited work's findings are compared
+- `MOTIVATION` — the cited work inspired this work
+
+The key pain point: **severe class imbalance**. `BACKGROUND` dominated at ~60% of samples. `MOTIVATION` was under 5%. A naive model just predicts BACKGROUND all day and gets decent accuracy while being completely useless.
+
+---
+
+## Baseline: fine-tuning SciBERT
+
+SciBERT is BERT pre-trained on scientific text — a natural fit here.
+
+```python
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
+
+MODEL_NAME = "allenai/scibert_scivocab_uncased"
+
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForSequenceClassification.from_pretrained(
+    MODEL_NAME,
+    num_labels=4,
+    problem_type="multi_label_classification"
+)
+```
+
+Note `multi_label_classification` — a single citation can have multiple intents simultaneously. This changes the loss from CrossEntropy to BCEWithLogitsLoss.
+
+Training loop was standard. Results after 5 epochs:
+
+| Label       | F1    |
+|-------------|-------|
+| BACKGROUND  | 0.81  |
+| METHOD      | 0.74  |
+| RESULT      | 0.61  |
+| MOTIVATION  | 0.38  |
+| **Macro F1**| **0.64** |
+
+Macro F1 of 0.64 looked okay on paper. MOTIVATION at 0.38 told the real story.
+
+---
+
+## The fix: Focal Loss
+
+Standard BCE treats every sample equally. Focal Loss down-weights easy examples (the overwhelming BACKGROUND samples) and forces the model to focus on hard, rare ones.
+
+```python
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=1.0, gamma=2.0):
+        super().__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, logits, targets):
+        bce = F.binary_cross_entropy_with_logits(
+            logits, targets, reduction="none"
+        )
+        pt = torch.exp(-bce)
+        focal = self.alpha * (1 - pt) ** self.gamma * bce
+        return focal.mean()
+```
+
+`gamma=2.0` is the standard starting point. I tried 1.5 and 3.0 — both worse on validation. Sometimes the defaults are defaults for a reason.
+
+After Focal Loss:
+
+| Label       | F1    |
+|-------------|-------|
+| BACKGROUND  | 0.80  |
+| METHOD      | 0.76  |
+| RESULT      | 0.67  |
+| MOTIVATION  | 0.55  |
+| **Macro F1**| **0.70** |
+
+MOTIVATION jumped from 0.38 → 0.55. The model was finally paying attention to minority classes.
+
+---
+
+## Per-class thresholds
+
+Default threshold for multi-label is 0.5 for all classes. That's lazy. MOTIVATION needed a lower threshold since the model was still underconfident on it.
+
+I swept thresholds per class on the validation set:
+
+```python
+from sklearn.metrics import f1_score
+import numpy as np
+
+def find_best_threshold(probs, labels, class_idx):
+    best_thresh, best_f1 = 0.5, 0.0
+    for t in np.arange(0.2, 0.8, 0.05):
+        preds = (probs[:, class_idx] > t).astype(int)
+        f1 = f1_score(labels[:, class_idx], preds)
+        if f1 > best_f1:
+            best_f1 = f1
+            best_thresh = t
+    return best_thresh
+
+thresholds = [
+    find_best_threshold(val_probs, val_labels, i)
+    for i in range(4)
+]
+# Result: [0.45, 0.40, 0.35, 0.30]
+```
+
+This alone gave +0.03 macro F1 for zero additional training cost. Always tune thresholds.
+
+---
+
+## FastAPI deployment
+
+The model lives behind a FastAPI microservice. The key design decision was keeping inference stateless — load the model once at startup, serve forever.
+
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel
+from transformers import pipeline
+import torch
+
+app = FastAPI()
+
+# Load once at startup
+classifier = pipeline(
+    "text-classification",
+    model="./checkpoints/scibert-focal-v2",
+    tokenizer="allenai/scibert_scivocab_uncased",
+    device=0 if torch.cuda.is_available() else -1,
+    top_k=None,  # return all labels
+)
+
+THRESHOLDS = {
+    "BACKGROUND": 0.45,
+    "METHOD": 0.40,
+    "RESULT": 0.35,
+    "MOTIVATION": 0.30,
+}
+
+class CitationRequest(BaseModel):
+    text: str
+
+@app.post("/classify")
+def classify(req: CitationRequest):
+    raw = classifier(req.text)[0]
+    results = {
+        item["label"]: item["score"]
+        for item in raw
+    }
+    predicted = [
+        label for label, score in results.items()
+        if score > THRESHOLDS[label]
+    ]
+    return {
+        "text": req.text,
+        "intents": predicted,
+        "scores": results,
+    }
+```
+
+The per-class threshold logic from training carries directly into inference. Consistency between training and serving matters more than people think — I've seen projects where training used one threshold and deployment used 0.5 for everything. That's a silent bug.
+
+---
+
+## What I'd do differently
+
+**More data augmentation.** MOTIVATION had so few samples that the model was essentially memorizing patterns. Back-translation or synonym replacement on minority classes would have helped.
+
+**Evaluate on out-of-domain papers.** All my eval was on the MultiCite test split — same distribution as training. Real-world citation sentences from random ArXiv papers felt noticeably worse in informal testing.
+
+**The RAG layer was overkill for v1.** I added a FAISS + Groq/Llama pipeline for context retrieval in a later milestone. It helped edge cases but added ~300ms latency per request. For most uses, the SciBERT classifier alone is enough.
+
+---
+
+## What's next
+
+- Distilling into a smaller model for lower-latency serving
+- Building an evaluation harness that tests on fresh ArXiv papers monthly
+- Writing up the RAG pipeline separately — it deserves its own post
+
+If you're working on scientific NLP or want the training code, it's on [GitHub](#).
