@@ -5,7 +5,6 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PostCard } from "@/components/PostCard";
-import { PostSearch } from "@/components/PostSearch";
 import { NewsletterForm } from "@/components/NewsletterForm";
 
 import { Input } from "@/components/ui/input";
@@ -35,21 +34,25 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32">
           <div className="animate-fade-up max-w-3xl">
-            {/* <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 font-mono text-xs text-muted-foreground backdrop-blur">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 font-mono text-xs text-muted-foreground backdrop-blur">
               <Sparkles className="h-3 w-3 text-primary" />
-              <span>Currently shipping: a tiny inference server in Rust</span>
-            </div> */}
+              <span>Currently building → a GitHub PR review agent using a custom transformer + AST-aware RAG</span>
+            </div>
 
+            <h2 className="mb-4 text-lg font-medium text-foreground">Hi, I'm Puranpal Singh.</h2>
+            
             <h1 className="mb-6 text-4xl font-semibold tracking-tight sm:text-6xl">
               Learning AI by{" "}
               <span className="text-gradient">building real projects</span>.
             </h1>
 
-            <p className="mb-8 max-w-2xl text-base text-muted-foreground sm:text-lg">
-              I'm an AI/ML learner and builder writing about LLMs, training
-              pipelines, and the messy debugging that happens between idea and
-              deployment. No fluff — just notes from the terminal.
+            <p className="mb-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
+              B.Tech IT @ NIT Kurukshetra. I build real AI systems from scratch — SciBERT classifiers, multi-agent LLM pipelines, path planning benchmarks — then write about every decision, mistake, and fix along the way. No fluff, just notes from the terminal.
             </p>
+
+            {/* <p className="mb-8 max-w-2xl text-base text-primary/80 font-medium">
+              Currently building → a GitHub PR review agent using a custom transformer + AST-aware RAG.
+            </p> */}
 
             <div className="flex flex-wrap gap-3">
               <Button
@@ -99,9 +102,37 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Search — client component receives posts as props */}
-      <section id="posts" className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <PostSearch posts={posts} />
+      {/* Latest Post Spotlight */}
+      <section id="posts" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <div className="mb-10">
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-primary">
+            // Latest
+          </p>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Latest post
+          </h2>
+        </div>
+
+        {posts.length > 0 && (
+          <Link 
+            href={`/blog/${posts[0].slug}`}
+            className="card-hover group block rounded-xl border border-border bg-card p-8"
+          >
+            <div className="mb-4">
+              <h3 className="mb-2 text-2xl font-semibold tracking-tight group-hover:text-primary transition-colors">
+                {posts[0].title}
+              </h3>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <time>{new Date(posts[0].date).toLocaleDateString()}</time>
+                <span>{posts[0].readTime}</span>
+              </div>
+            </div>
+            <p className="mb-6 text-muted-foreground">{posts[0].excerpt}</p>
+            <div className="flex items-center gap-2 text-primary font-semibold">
+              Read article <ArrowRight className="h-4 w-4" />
+            </div>
+          </Link>
+        )}
       </section>
 
       {/* Categories */}

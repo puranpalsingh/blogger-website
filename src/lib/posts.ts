@@ -57,14 +57,14 @@ export function getPostBySlug(slug: string): Post & { content: string } {
 export const projects = [
   {
     title: "Citation Intent Classifier",
-    description: "Fine-tuned SciBERT model with Focal Loss and ensemble learning for classifying citation intents in academic papers.",
-    tech: ["SciBERT", "PyTorch", "FastAPI"],
+    description: "Fine-tuned SciBERT with Focal Loss and ensemble learning to classify citation intents in academic papers. Deployed as a FastAPI microservice with per-class threshold inference.",
+    tech: ["SciBERT", "PyTorch", "FastAPI", "FAISS"],
     link: "https://github.com/puranpalsingh/Citation_Intent",
   },
   {
     title: "Git Summarizer",
-    description: "Automatically generate human-readable summaries of git commits and pull requests using LLMs.",
-    tech: ["LLMs", "Git", "TypeScript"],
+    description: "Paste any GitHub repo URL and get an instant LLM-generated summary of the entire codebase — plus individual file-level breakdowns. Built with TypeScript and the GitHub API.",
+    tech: ["LLMs", "GitHub API", "TypeScript"],
     link: "https://github.com/Devansh-rookie/git_summariser",
   },
 ];
@@ -87,10 +87,10 @@ export function getCategories() {
   });
 
   return [
-    { name: "Tutorials", slug: "tutorials", count: categoryMap.tutorial, description: "Step-by-step guides building real AI systems." },
-    { name: "Debugging Fixes", slug: "debugging", count: categoryMap.debugging, description: "Errors I hit, root causes, and the fix." },
-    { name: "Deployment Guides", slug: "deployment", count: categoryMap.deployment, description: "Shipping models to production without pain." },
-    { name: "AI Experiments", slug: "experiments", count: categoryMap.experiment, description: "Half-broken ideas that taught me something." },
+    { name: "Tutorials", slug: "tutorials", count: categoryMap.tutorial, description: "Step-by-step builds of real AI systems, from dataset to deployment." },
+    { name: "Debugging Fixes", slug: "debugging", count: categoryMap.debugging, description: "Errors I hit, why they happened, and exactly how I fixed them." },
+    { name: "Deployment Guides", slug: "deployment", count: categoryMap.deployment, description: "Getting models out of notebooks and into production." },
+    { name: "AI Experiments", slug: "experiments", count: categoryMap.experiment, description: "Half-broken ideas that taught me something useful." },
   ];
 }
 
