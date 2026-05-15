@@ -11,7 +11,7 @@ export function SiteNav() {
           <span className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-primary to-accent text-primary-foreground">
             <Terminal className="h-4 w-4" />
           </span>
-          <span>Puranpal <span className="text-muted-foreground">/ devlog·ai</span></span>
+          <span>Puranpal <span className="text-muted-foreground">Singh</span></span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
           <a href="/#posts" className="transition-colors hover:text-foreground">Posts</a>
