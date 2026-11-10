@@ -39,7 +39,7 @@ export default function HomePage() {
               <span>Currently building → a GitHub PR review agent using a custom transformer + AST-aware RAG</span>
             </div>
 
-            <h2 className="mb-4 text-lg font-medium text-foreground">Hi, I'm Puranpal Singh.</h2>
+            <h2 className="mb-4 text-lg font-medium text-foreground">Hi, I'm Hitesh.</h2>
             
             <h1 className="mb-6 text-4xl font-semibold tracking-tight sm:text-6xl">
               Learning AI by{" "}
@@ -47,7 +47,7 @@ export default function HomePage() {
             </h1>
 
             <p className="mb-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
-              B.Tech IT @ NIT Kurukshetra. I build real AI systems from scratch — SciBERT classifiers, multi-agent LLM pipelines, path planning benchmarks — then write about every decision, mistake, and fix along the way. No fluff, just notes from the terminal.
+              B.Tech Civil @ NIT Kurukshetra. I build real AI systems from scratch — SciBERT classifiers, multi-agent LLM pipelines, path planning benchmarks — then write about every decision, mistake, and fix along the way. No fluff, just notes from the terminal.
             </p>
 
             {/* <p className="mb-8 max-w-2xl text-base text-primary/80 font-medium">

@@ -30,8 +30,8 @@ export const metadata: Metadata = {
     "LLM", "PyTorch", "NLP", "fine-tuning", "deployment",
   ],
 
-  authors: [{ name: "Puranpal Singh", url: SITE_URL }],
-  creator: "Puranpal Singh",
+  authors: [{ name: "Hitesh", url: SITE_URL }],
+  creator: "Hitesh",
 
   openGraph: {
     type: "website",
