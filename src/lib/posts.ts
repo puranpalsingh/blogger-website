@@ -59,7 +59,7 @@ export const projects = [
     title: "Citation Intent Classifier",
     description: "Fine-tuned SciBERT with Focal Loss and ensemble learning to classify citation intents in academic papers. Deployed as a FastAPI microservice with per-class threshold inference.",
     tech: ["SciBERT", "PyTorch", "FastAPI", "FAISS"],
-    link: "https://github.com/puranpalsingh/Citation_Intent",
+    link: "https://github.com/hitesh/Citation_Intent",
   },
   {
     title: "Git Summarizer",

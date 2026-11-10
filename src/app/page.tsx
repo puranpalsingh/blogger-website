@@ -67,7 +67,7 @@ export default function HomePage() {
               </Button>
 
               <Button asChild variant="outline" size="lg">
-                <Link href="https://github.com/puranpalsingh" target="_blank">
+                <Link href="https://github.com/hitesh" target="_blank">
                   GitHub
                 </Link>
               </Button>
